@@ -136,9 +136,9 @@ public final class ExoPlayerView extends FrameLayout {
      * @param player The {@link ExoPlayer} to use.
      */
     public void setPlayer(ExoPlayer player) {
-        if (this.player == player) {
-            return;
-        }
+        // if (this.player == player) {
+        //     return;
+        // }
         if (this.player != null) {
             this.player.removeListener(componentListener);
             clearVideoView();
