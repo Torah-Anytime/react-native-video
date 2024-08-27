@@ -2,9 +2,10 @@ package com.brentvatne.exoplayer;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.TextureView;
@@ -18,7 +19,6 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.TracksInfo;
 import com.google.android.exoplayer2.text.Cue;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
@@ -35,8 +35,8 @@ public final class ExoPlayerView extends FrameLayout {
     private final AspectRatioFrameLayout layout;
     private final ComponentListener componentListener;
     private ExoPlayer player;
-    private Context context;
-    private ViewGroup.LayoutParams layoutParams;
+    private final Context context;
+    private final ViewGroup.LayoutParams layoutParams;
 
     private boolean useTextureView = true;
     private boolean useSecureView = false;
@@ -193,14 +193,11 @@ public final class ExoPlayerView extends FrameLayout {
         updateShutterViewVisibility();
     }
 
-    private final Runnable measureAndLayout = new Runnable() {
-        @Override
-        public void run() {
-            measure(
-                    MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
-            layout(getLeft(), getTop(), getRight(), getBottom());
-        }
+    private final Runnable measureAndLayout = () -> {
+        measure(
+                MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
+        layout(getLeft(), getTop(), getRight(), getBottom());
     };
 
     private void updateForCurrentTrackSelections() {
@@ -229,8 +226,8 @@ public final class ExoPlayerView extends FrameLayout {
         // TextRenderer.Output implementation
 
         @Override
-        public void onCues(List<Cue> cues) {
-            subtitleLayout.onCues(cues);
+        public void onCues(@NonNull List<Cue> cues) {
+            subtitleLayout.setCues(cues);
         }
 
         // ExoPlayer.VideoListener implementation
@@ -269,27 +266,27 @@ public final class ExoPlayerView extends FrameLayout {
         }
 
         @Override
-        public void onPlayerError(PlaybackException e) {
+        public void onPlayerError(@NonNull PlaybackException e) {
             // Do nothing.
         }
 
         @Override
-        public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
+        public void onPositionDiscontinuity(@NonNull Player.PositionInfo oldPosition, @NonNull Player.PositionInfo newPosition, int reason) {
             // Do nothing.
         }
 
         @Override
-        public void onTimelineChanged(Timeline timeline, int reason) {
+        public void onTimelineChanged(@NonNull Timeline timeline, int reason) {
             // Do nothing.
         }
 
-        @Override
-        public void onTracksInfoChanged(TracksInfo tracksInfo) {
-            updateForCurrentTrackSelections();
-        }
+//        @Override
+//        public void onTracksInfoChanged(TracksInfo tracksInfo) {
+//            updateForCurrentTrackSelections();
+//        }
 
         @Override
-        public void onPlaybackParametersChanged(PlaybackParameters params) {
+        public void onPlaybackParametersChanged(@NonNull PlaybackParameters params) {
             // Do nothing
         }
 
