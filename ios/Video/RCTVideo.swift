@@ -586,7 +586,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                 
                 self.onVideoFullscreenPlayerWillPresent?(["target": reactTag as Any])
                 
-                viewController.present(viewController, animated:true, completion:{
+                viewController.present(_playerViewController!, animated:true, completion:{
                     self._playerViewController?.showsPlaybackControls = true
                     self._fullscreenPlayerPresented = fullscreen
                     self._playerViewController?.autorotate = self._fullscreenAutorotate
