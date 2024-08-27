@@ -49,7 +49,7 @@ public class ExoPlayerFullscreenVideoActivity extends AppCompatActivity implemen
         playerControlView.setPlayer(player);
         // Set the fullscreen button to "close fullscreen" icon
         ImageView fullscreenIcon = playerControlView.findViewById(R.id.exo_fullscreen_icon);
-        fullscreenIcon.setImageResource(R.drawable.exo_controls_fullscreen_exit);
+        // fullscreenIcon.setImageResource(R.drawable.exo_controls_fullscreen_exit);
         playerControlView.findViewById(R.id.exo_fullscreen_button)
                 .setOnClickListener(v -> {
                     if (exoplayerView != null) {
