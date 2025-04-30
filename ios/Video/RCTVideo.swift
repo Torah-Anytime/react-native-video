@@ -62,6 +62,10 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
     private var _resouceLoaderDelegate: RCTResourceLoaderDelegate?
     private var _playerObserver: RCTPlayerObserver = RCTPlayerObserver()
+
+    private static var fullscreenPauseOperationTimestamp: TimeInterval = 0
+    private static var lastPauseState: Bool?
+    private static let fullscreenDebounceInterval: TimeInterval = 0.5
     
 #if canImport(RCTVideoCache)
     private let _videoCache:RCTVideoCachingHandler = RCTVideoCachingHandler()
@@ -70,6 +74,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 #if TARGET_OS_IOS
     private let _pip:RCTPictureInPicture = RCTPictureInPicture(self.onPictureInPictureStatusChanged, self.onRestoreUserInterfaceForPictureInPictureStop)
 #endif
+    
     
     // Events
     @objc var onVideoLoadStart: RCTDirectEventBlock?
@@ -378,23 +383,51 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         applyModifiers()
     }
     
-    @objc
-    func setPaused(_ paused:Bool) {
-        if paused {
-            _player?.pause()
-            _player?.rate = 0.0
-        } else {
-            RCTPlayerOperations.configureAudio(ignoreSilentSwitch:_ignoreSilentSwitch, mixWithOthers:_mixWithOthers)
+     @objc
+    func setPaused(_ paused: Bool) {
+        // Special handling for fullscreen mode
+        if _fullscreenPlayerPresented {
+            let now = Date().timeIntervalSince1970
+            let elapsed = now - RCTVideo.fullscreenPauseOperationTimestamp
             
-            if #available(iOS 10.0, *), !_automaticallyWaitsToMinimizeStalling {
-                _player?.playImmediately(atRate: _rate)
-            } else {
-                _player?.play()
-                _player?.rate = _rate
+            // If this is a redundant state change or happening too quickly, ignore it
+            if (RCTVideo.lastPauseState == paused || elapsed < RCTVideo.fullscreenDebounceInterval) {
+                return
             }
-            _player?.rate = _rate
+            
+            // Update our static tracking properties
+            RCTVideo.fullscreenPauseOperationTimestamp = now
+            RCTVideo.lastPauseState = paused
         }
         
+        // Regular pause/play logic
+        if paused {
+            if _adPlaying {
+                #if USE_GOOGLE_IMA
+                    _imaAdsManager.getAdsManager()?.pause()
+                #endif
+            } else {
+                _player?.pause()
+                _player?.rate = 0.0
+            }
+        } else {
+            RCTPlayerOperations.configureAudio(ignoreSilentSwitch: _ignoreSilentSwitch, mixWithOthers: _mixWithOthers, audioOutput: _audioOutput)
+
+            if _adPlaying {
+                #if USE_GOOGLE_IMA
+                    _imaAdsManager.getAdsManager()?.resume()
+                #endif
+            } else {
+                if #available(iOS 10.0, *), !_automaticallyWaitsToMinimizeStalling {
+                    _player?.playImmediately(atRate: _rate)
+                } else {
+                    _player?.play()
+                    _player?.rate = _rate
+                }
+                _player?.rate = _rate
+            }
+        }
+
         _paused = paused
     }
     
